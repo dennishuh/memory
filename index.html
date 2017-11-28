@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Memory Game</title>
+  <style>
+    .gameTile {
+      width: 24%;
+      height: 200px;
+      float: left;
+      border: 1px solid #dedede;
+    }
+
+    #gameboard {
+      width: 100%;
+      height: 100%;
+    }
+
+    .flipImage {
+      width: 100%;
+      height: 200px;
+    }
+
+    .matched {
+      visibility: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="wrapper">
+    <button id="start">Start</button>
+    <div id="gameboard"></div>
+  </div>
+  <script>
+    let gameStarted = false;
+    let cards = ['red', 'orange', 'blue', 'green', 'lightblue', 'pink', 'coral', 'chocolate', 'DarkMagenta',  'DarkSalmon', 'Fuchsia', 'GreenYellow'];
+    let cardFlippedOver = [];
+    let cardFlipped = -1;
+    let timer = '';
+    let playLockout = false;
+    let gameBoard = document.getElementById('gameboard')
+    let randomCards;
+    let startButton = document.getElementById('start');
+
+    startButton.addEventListener('click', startGame);
+
+    const randomizeArray = arr => arr.sort(() => Math.random() - 0.5);
+
+    function startGame() {
+      this.style.display = 'none';
+      if (!gameStarted) {
+        gameStarted = true;
+        cards = cards.concat(cards);
+        randomCards = randomizeArray(cards);
+        buildBoard();
+      }
+    };
+
+    function cardFlip(t, i) {
+      t.style.backgroundColor = randomCards[i];
+      cardFlippedOver.push(t.id);
+    }
+
+    function hideCard(t) {
+      for (let i=0; i < 2; i++) {
+        let card = cardFlippedOver.pop();
+        let wrongCard = document.getElementById(card);
+        wrongCard.style.backgroundColor = 'gray';
+      }
+      clearInterval(timer);
+      playLockout = false;
+      cardFlipped = -1;
+    }
+
+    function getColor(card) {
+      let cardSelected = document.getElementById(card)
+      return cardSelected.dataset.color;
+    }
+
+    function setMatchedClass(cardArr) {
+      let matchedCard1 = document.getElementById(cardArr[cardArr.length-1]);
+      let matchedCard2 = document.getElementById(cardArr[cardArr.length-2]);
+
+      matchedCard1.className = 'matched';
+      matchedCard2.className = 'matched';
+    }
+
+    function pickCard(index, t) {
+      if (!cardFlippedOver.includes(t.id) && !playLockout) {
+        if (cardFlipped >= 0) {
+          cardFlip(t, index);
+          let secondCard = index;
+          playLockout = true;
+
+          if (getColor(cardFlippedOver[cardFlippedOver.length-1]) === getColor(cardFlippedOver[cardFlippedOver.length-2])) {
+            setMatchedClass(cardFlippedOver)
+            playLockout = false;
+            cardFlipped = -1;
+          } else {
+            timer = setInterval(hideCard, 300);
+          }
+        } else {
+          cardFlip(t, index);
+          cardFlipped = index;
+        }
+      }
+    }
+
+    function buildBoard() {
+      var html = "";
+      for (let i = 0; i < randomCards.length; i++) {
+        html += '<div class="gameTile">';
+        html += `<div id="card${i}" data-color="${randomCards[i]}" style="background: gray" onclick="pickCard(${i}, this)" class="flipImage"></div></div>`;
+      }
+
+      gameBoard.innerHTML += html
+    }
+
+  </script>
+</body>
+</html>
